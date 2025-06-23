@@ -52,11 +52,11 @@ def get_firms_df(bbox, days, api_key, source):
     df["acq_datetime_local"] = df["acq_datetime_utc"].dt.tz_convert("Europe/Rome")
     return df, url
 
-if st.button("🔄 Aggiorna ora"):
-    st.cache_data.clear()
+# if st.button("🔄 Aggiorna ora"):
+#     st.cache_data.clear()
 
 df, url_used = get_firms_df(BBOX, DAYS, MAP_KEY, SOURCE)
-st.caption(f"URL usato: `{url_used}`")
+# st.caption(f"URL usato: `{url_used}`")
 
 if df.empty:
     st.warning("Nessun hotspot o MAP_KEY errata – amplia l'intervallo o verifica la chiave.")
