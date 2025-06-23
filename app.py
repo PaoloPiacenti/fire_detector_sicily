@@ -29,7 +29,7 @@ with st.expander("ℹ️ Che cosa stai vedendo?"):
 Ogni pin indica un *hotspot* (fuoco o forte sorgente di calore).
 
 * **Colore pin** → freschezza (≤ 6 h rosso scuro, ≤ 12 h rosso, ≤ 36 h arancio, > 36 h nero)
-* **Dimensione pin** → intensità e footprint (combina Bright_Ti4, FRP, scan/track)
+* **Icona pin** → 🔥 dato ≤12 h, ☁️ ≤36 h, 🌳 più vecchio
 * Clicca un pin per i dettagli (appaiono a destra).
 """)
 
@@ -72,6 +72,15 @@ def color_by_age(ts):
     if hrs <= 36:  return "orange"
     return "black"
 
+def icon_by_age(ts):
+    """Return a Font Awesome icon name based on the age in hours."""
+    hrs = (datetime.now(timezone.utc) - ts).total_seconds() / 3600
+    if hrs <= 12:
+        return "fire"         # dato più recente di 12h
+    if hrs <= 36:
+        return "cloud"        # tra 12h e 36h → fumo
+    return "tree"             # oltre 36h → tronco d'albero
+
 def radius_by_intensity(row):
     b_norm  = np.clip((row["bright_ti4"] - 300) / 100, 0, 1)       # 300-400 K
     frp_norm= np.clip(row["frp"] / 50, 0, 1)                       # 0-50 MW
@@ -86,14 +95,15 @@ m = folium.Map(location=center, zoom_start=7, tiles="OpenStreetMap")
 for _, r in df.iterrows():
     age_min = int((datetime.now(timezone.utc) - r['acq_datetime_utc']).total_seconds() / 60)
 
-    folium.CircleMarker(
+    icon = folium.Icon(
+        icon=icon_by_age(r['acq_datetime_utc']),
+        prefix='fa',
+        color=color_by_age(r['acq_datetime_utc'])
+    )
+
+    folium.Marker(
         [r["latitude"], r["longitude"]],
-        radius=radius_by_intensity(r),
-        color="white",
-        weight=1,
-        fill=True,
-        fill_color=color_by_age(r["acq_datetime_utc"]),
-        fill_opacity=0.9,
+        icon=icon,
         tooltip=f"{age_min} min • FRP {r['frp']:.1f}",
         popup=(
             f"<table style='font-size:13px'>"
