@@ -81,6 +81,15 @@ def icon_by_age(ts):
         return "smog"        # tra 12h e 36h → fumo
     return "fire-extinguisher"             # oltre 36h → estintore
 
+def icon_size_by_scan_track(scan, track):
+    """Return (width, height) for the marker based on scan/track."""
+    avg = (scan + track) / 2
+    if avg >= 0.006:
+        return (35, 35)      # grande
+    if avg >= 0.003:
+        return (25, 25)      # medio
+    return (15, 15)          # piccolo
+
 def radius_by_intensity(row):
     b_norm  = np.clip((row["bright_ti4"] - 300) / 100, 0, 1)       # 300-400 K
     frp_norm= np.clip(row["frp"] / 50, 0, 1)                       # 0-50 MW
@@ -98,7 +107,8 @@ for _, r in df.iterrows():
     icon = folium.Icon(
         icon=icon_by_age(r['acq_datetime_utc']),
         prefix='fa',
-        color=color_by_age(r['acq_datetime_utc'])
+        color=color_by_age(r['acq_datetime_utc']),
+        icon_size=icon_size_by_scan_track(r['scan'], r['track'])
     )
 
     folium.Marker(
@@ -127,7 +137,12 @@ legend = """
 <span style="display:inline-block;width:12px;height:12px;background:#8B0000"></span>&nbsp;≤ 6 h<br>
 <span style="display:inline-block;width:12px;height:12px;background:#FF0000"></span>&nbsp;≤ 12 h<br>
 <span style="display:inline-block;width:12px;height:12px;background:#FFA500"></span>&nbsp;≤ 36 h<br>
-<span style="display:inline-block;width:12px;height:12px;background:#000000"></span>&nbsp;&gt; 36 h
+<span style="display:inline-block;width:12px;height:12px;background:#000000"></span>&nbsp;&gt; 36 h<br>
+<hr style='margin:4px 0;'>
+<b>Dimensione pin</b><br>
+<span style="font-size:18px">📍</span>&nbsp;grande ≥0.006°<br>
+<span style="font-size:14px">📍</span>&nbsp;medio ≥0.003°<br>
+<span style="font-size:10px">📍</span>&nbsp;piccolo &lt;0.003°
 </div>
 """
 m.get_root().html.add_child(folium.Element(legend))
