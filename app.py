@@ -13,7 +13,7 @@ from streamlit_folium import st_folium
 # ─────────────────────────── PARAMETRI BASE ───────────────────────────
 BBOX   = (11.8, 35.4, 15.7, 39.0)        # west, south, east, north (Sicilia)
 SOURCE = "VIIRS_NOAA20_NRT"              # satellite & product
-MAP_KEY = os.getenv("FIRMS_MAP_KEY") or "INSERISCI_LA_TUA_CHIAVE"
+MAP_KEY = MAP_KEY = st.secrets.get("MAP_KEY", os.getenv("FIRMS_MAP_KEY"))
 CACHE_HOURS = 0.5                        # refresh ogni 30 min
 # ──────────────────────────────────────────────────────────────────────
 
