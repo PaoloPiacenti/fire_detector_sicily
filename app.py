@@ -41,6 +41,7 @@ def get_firms_df(bbox, days, api_key, source):
     w, s, e, n = bbox
     url = f"https://firms.modaps.eosdis.nasa.gov/api/area/csv/{api_key}/{source}/{w},{s},{e},{n}/{days}"
     r = requests.get(url, timeout=60); r.raise_for_status()
+    st.session_state.api_calls += 1
     df = pd.read_csv(StringIO(r.text))
     if df.empty or {"acq_date", "acq_time"} - set(df.columns):
         return pd.DataFrame(), url
@@ -61,7 +62,6 @@ if df.empty:
     st.warning("Nessun hotspot o MAP_KEY errata – amplia l'intervallo o verifica la chiave.")
     st.stop()
 
-st.session_state.api_calls += 1
 st.sidebar.write(f"Chiamate API effettive: **{st.session_state.api_calls}**")
 
 # ───── funzioni colore & raggio ───────────────────────────────────────
