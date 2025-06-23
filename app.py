@@ -15,13 +15,13 @@ BBOX   = (11.8, 35.4, 15.7, 39.0)        # west, south, east, north (Sicilia)
 SOURCE = "VIIRS_NOAA20_NRT"              # satellite & product
 MAP_KEY = MAP_KEY = st.secrets.get("MAP_KEY", os.getenv("FIRMS_MAP_KEY"))
 CACHE_HOURS = 0.5                        # refresh ogni 30 min
+DAYS = 3
 # ──────────────────────────────────────────────────────────────────────
 
 st.set_page_config(page_title="Incendi FIRMS – Sicilia", layout="wide")
 st.title("🔥 Incendi FIRMS in Sicilia")
 
 # ───── slider giorni & spiegazione dataset ───────────────────────────
-days = st.sidebar.slider("Giorni da visualizzare", 1, 10, 3)
 
 with st.expander("ℹ️ Che cosa stai vedendo?"):
     st.markdown("""
@@ -55,14 +55,14 @@ def get_firms_df(bbox, days, api_key, source):
 if st.button("🔄 Aggiorna ora"):
     st.cache_data.clear()
 
-df, url_used = get_firms_df(BBOX, days, MAP_KEY, SOURCE)
+df, url_used = get_firms_df(BBOX, DAYS, MAP_KEY, SOURCE)
 st.caption(f"URL usato: `{url_used}`")
 
 if df.empty:
     st.warning("Nessun hotspot o MAP_KEY errata – amplia l'intervallo o verifica la chiave.")
     st.stop()
 
-st.sidebar.write(f"Chiamate API effettive: **{st.session_state.api_calls}**")
+# st.sidebar.write(f"Chiamate API effettive: **{st.session_state.api_calls}**")
 
 # ───── funzioni colore & raggio ───────────────────────────────────────
 def color_by_age(ts):
@@ -78,8 +78,8 @@ def icon_by_age(ts):
     if hrs <= 12:
         return "fire"         # dato più recente di 12h
     if hrs <= 36:
-        return "cloud"        # tra 12h e 36h → fumo
-    return "tree"             # oltre 36h → tronco d'albero
+        return "smog"        # tra 12h e 36h → fumo
+    return "fire-extinguisher"             # oltre 36h → estintore
 
 def radius_by_intensity(row):
     b_norm  = np.clip((row["bright_ti4"] - 300) / 100, 0, 1)       # 300-400 K
