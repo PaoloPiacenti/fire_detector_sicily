@@ -29,7 +29,7 @@ with st.expander("ℹ️ Che cosa stai vedendo?"):
 Ogni pin indica un *hotspot* (fuoco o forte sorgente di calore).
 
 * **Colore pin** → freschezza (≤ 6 h rosso scuro, ≤ 12 h rosso, ≤ 36 h arancio, > 36 h nero)
-* **Icona pin** → 🔥 dato ≤12 h, ☁️ ≤36 h, 🌳 più vecchio
+    * **Icona pin** → 🔥 FRP/Brightness alti, ☁️ medi, estintore bassi
 * Clicca un pin per i dettagli (appaiono a destra).
 """)
 
@@ -72,14 +72,13 @@ def color_by_age(ts):
     if hrs <= 36:  return "orange"
     return "black"
 
-def icon_by_age(ts):
-    """Return a Font Awesome icon name based on the age in hours."""
-    hrs = (datetime.now(timezone.utc) - ts).total_seconds() / 3600
-    if hrs <= 12:
-        return "fire"         # dato più recente di 12h
-    if hrs <= 36:
-        return "smog"        # tra 12h e 36h → fumo
-    return "fire-extinguisher"             # oltre 36h → estintore
+def icon_by_stage(frp, brightness):
+    """Return Font Awesome icon name based on FRP and brightness."""
+    if frp >= 20 or brightness >= 430:
+        return "fire"  # fiamma viva
+    if frp >= 10 or brightness >= 380:
+        return "smog"  # materiale rovente
+    return "fire-extinguisher"  # calore residuo
 
 def radius_by_intensity(row):
     b_norm  = np.clip((row["bright_ti4"] - 300) / 100, 0, 1)       # 300-400 K
@@ -96,7 +95,7 @@ for _, r in df.iterrows():
     age_min = int((datetime.now(timezone.utc) - r['acq_datetime_utc']).total_seconds() / 60)
 
     icon = folium.Icon(
-        icon=icon_by_age(r['acq_datetime_utc']),
+        icon=icon_by_stage(r['frp'], r['bright_ti4']),
         prefix='fa',
         color=color_by_age(r['acq_datetime_utc'])
     )
