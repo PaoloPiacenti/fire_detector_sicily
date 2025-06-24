@@ -18,8 +18,9 @@ CACHE_HOURS = 0.5                        # refresh ogni 30 min
 DAYS = 3
 # ──────────────────────────────────────────────────────────────────────
 
-st.set_page_config(page_title="Incendi FIRMS – Sicilia", layout="wide")
-st.title("🔥 Incendi FIRMS in Sicilia")
+st.set_page_config(page_title="Incendi in Sicilia - NASA FIRMS VIIRS NOAA-20, Near-Real-Time", layout="centered")
+
+st.title("🔥 Incendi in Sicilia - NASA FIRMS VIIRS NOAA-20")
 
 # ───── slider giorni & spiegazione dataset ───────────────────────────
 
@@ -67,18 +68,21 @@ if df.empty:
 # ───── funzioni colore & raggio ───────────────────────────────────────
 def color_by_age(ts):
     hrs = (datetime.now(timezone.utc) - ts).total_seconds() / 3600
-    if hrs <= 6:   return "darkred"
-    if hrs <= 12:  return "red"
-    if hrs <= 36:  return "orange"
-    return "black"
+    if hrs <= 6:   return "red"
+    if hrs <= 12:  return "orange"
+    if hrs <= 36:  return "yellow"
+    return "gray"
 
 def icon_by_stage(frp, brightness):
     """Return Font Awesome icon name based on FRP and brightness."""
-    if frp >= 20 or brightness >= 430:
+    if frp >= 50 or brightness >= 367:
         return "fire"  # fiamma viva
-    if frp >= 10 or brightness >= 380:
-        return "smog"  # materiale rovente
-    return "fire-extinguisher"  # calore residuo
+    elif frp >= 10:
+        return "triangle-exclamation"  # materiale rovente
+    elif frp > 0 or brightness >= 330:
+        return "temperature-high"  # calore residuo
+    else:
+        return None  # nessuna icona
 
 def icon_size_by_scan_track(scan, track):
     """Return (width, height) for the marker based on scan/track."""
@@ -118,33 +122,33 @@ for _, r in df.iterrows():
             f"<table style='font-size:13px'>"
             f"<tr><td><b>FRP</b></td><td>{r['frp']:.1f} MW</td></tr>"
             f"<tr><td><b>Brightness</b></td><td>{r['bright_ti4']} K</td></tr>"
-            f"<tr><td><b>Scan/Track</b></td><td>{r['scan']:.4f} / {r['track']:.4f}°</td></tr>"
+            #f"<tr><td><b>Scan/Track</b></td><td>{r['scan']:.4f} / {r['track']:.4f}°</td></tr>"
             f"<tr><td><b>Satellite</b></td><td>{r['satellite']}</td></tr>"
             f"<tr><td><b>Confidenza</b></td><td>{r['confidence']}</td></tr>"
-            f"<tr><td><b>UTC</b></td><td>{r['acq_datetime_utc']:%Y-%m-%d %H:%M}</td></tr>"
-            f"<tr><td><b>Locale</b></td><td>{r['acq_datetime_local']:%d/%m %H:%M}</td></tr>"
+            #f"<tr><td><b>UTC</b></td><td>{r['acq_datetime_utc']:%Y-%m-%d %H:%M}</td></tr>"
+            f"<tr><td><b>Ora Locale</b></td><td>{r['acq_datetime_local']:%d/%m %H:%M}</td></tr>"
             f"</table>"
         ),
     ).add_to(m)
 
 # ───── legenda colori -------------------------------------------------
-legend = """
-<div style='position: fixed; bottom:25px; right:25px; z-index:9999;
-            background:rgba(255,255,255,0.9); padding:8px 10px;
-            border:1px solid #ccc; border-radius:4px; font-size:13px'>
-<b>Età hotspot</b><br>
-<span style="display:inline-block;width:12px;height:12px;background:#8B0000"></span>&nbsp;≤ 6 h<br>
-<span style="display:inline-block;width:12px;height:12px;background:#FF0000"></span>&nbsp;≤ 12 h<br>
-<span style="display:inline-block;width:12px;height:12px;background:#FFA500"></span>&nbsp;≤ 36 h<br>
-<span style="display:inline-block;width:12px;height:12px;background:#000000"></span>&nbsp;&gt; 36 h<br>
-<hr style='margin:4px 0;'>
-<b>Dimensione pin</b><br>
-<span style="font-size:18px">📍</span>&nbsp;grande ≥0.006°<br>
-<span style="font-size:14px">📍</span>&nbsp;medio ≥0.003°<br>
-<span style="font-size:10px">📍</span>&nbsp;piccolo &lt;0.003°
-</div>
-"""
-m.get_root().html.add_child(folium.Element(legend))
+# legend = """
+# <div style='position: fixed; bottom:25px; right:25px; z-index:9999;
+#             background:rgba(255,255,255,0.9); padding:8px 10px;
+#             border:1px solid #ccc; border-radius:4px; font-size:13px'>
+# <b>Età hotspot</b><br>
+# <span style="display:inline-block;width:12px;height:12px;background:#8B0000"></span>&nbsp;≤ 6 h<br>
+# <span style="display:inline-block;width:12px;height:12px;background:#FF0000"></span>&nbsp;≤ 12 h<br>
+# <span style="display:inline-block;width:12px;height:12px;background:#FFA500"></span>&nbsp;≤ 36 h<br>
+# <span style="display:inline-block;width:12px;height:12px;background:#000000"></span>&nbsp;&gt; 36 h<br>
+# <hr style='margin:4px 0;'>
+# <b>Dimensione pin</b><br>
+# <span style="font-size:18px">📍</span>&nbsp;grande ≥0.006°<br>
+# <span style="font-size:14px">📍</span>&nbsp;medio ≥0.003°<br>
+# <span style="font-size:10px">📍</span>&nbsp;piccolo &lt;0.003°
+# </div>
+# """
+# m.get_root().html.add_child(folium.Element(legend))
 
 # ───── controllo click & tabella dettagli ----------------------------
 map_state = st_folium(m, use_container_width=True, key="map")
